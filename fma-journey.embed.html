@@ -1055,13 +1055,51 @@ function L(zh, en) { return App.lang === 'zh' ? zh : en; }
 var EMBED_Q = new URLSearchParams(location.search);
 var IS_EMBED = EMBED_Q.get('embed') === '1' || (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
 
-function fmaPost(msg) {
-  if (!IS_EMBED) return;
+/* ===== 逐人行为上报（beacon）=====
+   默认 BEACON_URL 为空 → 不发任何数据，保持纯离线。
+   部署腾讯云 SCF 接收端点后，把网关地址填入此处即可开启上报。
+   数据：匿名 client_id（每浏览器随机 UUID，不关联身份）+ 章节/语言/累计时长/事件类型。
+   接收端示例见 scf/ 目录（Python SCF 写 CLS 日志）。 */
+var BEACON_URL = "";
+function fmaCid() {
   try {
-    var payload = { source: 'fma-journey' };
-    for (var k in msg) { if (Object.prototype.hasOwnProperty.call(msg, k)) payload[k] = msg[k]; }
-    window.parent.postMessage(payload, '*');
+    var c = localStorage.getItem('fma_cid');
+    if (!c) {
+      c = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'c' + Date.now().toString(36) + Math.random().toString(16).slice(2);
+      localStorage.setItem('fma_cid', c);
+    }
+    return c;
+  } catch (e) { return 'anon'; }
+}
+var _fmaLastBeat = 0;
+function fmaBeacon(p) {
+  if (!BEACON_URL) return;
+  try {
+    var now = Date.now();
+    if (p && p.type === 'state') { if (now - _fmaLastBeat < 5000) return; _fmaLastBeat = now; }
+    var rec = {
+      cid: fmaCid(), type: p ? p.type : '?',
+      chapter: p ? p.chapter : null, lang: p ? p.lang : null,
+      time: p ? p.time : null, ts: now,
+      ua: (navigator.userAgent || '').slice(0, 120),
+      ref: (document.referrer || '').slice(0, 200), v: 1
+    };
+    var blob = new Blob([JSON.stringify(rec)], { type: 'application/json' });
+    if (navigator.sendBeacon) navigator.sendBeacon(BEACON_URL, blob);
+    else { var x = new XMLHttpRequest(); x.open('POST', BEACON_URL, true); x.setRequestHeader('Content-Type', 'application/json'); x.send(JSON.stringify(rec)); }
   } catch (e) {}
+}
+
+function fmaPost(msg) {
+  if (IS_EMBED) {
+    try {
+      var payload = { source: 'fma-journey' };
+      for (var k in msg) { if (Object.prototype.hasOwnProperty.call(msg, k)) payload[k] = msg[k]; }
+      window.parent.postMessage(payload, '*');
+    } catch (e) {}
+  }
+  fmaBeacon(msg);
 }
 function fmaChapters() {
   return EPOCHS.map(function (e, i) {
@@ -1125,13 +1163,17 @@ function installEmbedBridge() {
     setTimeout(function () { try { App.start(); } catch (e) {} }, 80);
   }
 
-  if (IS_EMBED) setInterval(function () { fmaPost(fmaState()); }, 500);
+  setInterval(function () { fmaPost(fmaState()); }, 500);
 
   var sayReady = function () {
     fmaPost({ type: 'ready', chapters: fmaChapters(), total: TOTAL, epochSec: EPOCH_SEC, lang: App.lang });
   };
   sayReady();
   setTimeout(sayReady, 300);
+
+  window.addEventListener('beforeunload', function () {
+    fmaBeacon({ type: 'exit', chapter: App.Ge, lang: App.lang, time: Math.round(App.Rt) });
+  });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
