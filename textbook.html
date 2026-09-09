@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>牛顿第二定律的演化 · F = ma</title>
+<style>
+:root{--bg:#0a0c12;--panel:#111420;--line:rgba(220,222,236,.12);
+  --ink:#d9d6ce;--muted:#8b8f9c;--gold:#daba85;--gold-dim:rgba(218,186,133,.16)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+a{color:var(--gold)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(18px,3.4vw,44px) 80px}
+
+header.top{position:sticky;top:0;z-index:30;background:rgba(10,12,18,.92);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding:13px clamp(18px,3.4vw,44px);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mark{width:26px;height:26px;flex:none;color:var(--gold)}
+.mark svg{width:100%;height:100%;display:block}
+.top-t{font-size:14px;letter-spacing:2.4px;font-weight:600}
+.top-s{font-size:11px;color:var(--muted);letter-spacing:1.6px}
+.lms{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:11px;letter-spacing:1.2px;padding:5px 12px;border-radius:999px;white-space:nowrap;
+  border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip.g{border-color:var(--gold-dim);background:rgba(218,186,133,.07);color:var(--gold)}
+.chip.warn{border-color:rgba(220,160,80,.3);color:#d9a95a}
+
+h1.lesson{font-size:clamp(28px,3.6vw,44px);font-weight:600;letter-spacing:2px;margin:52px 0 10px;line-height:1.3}
+.lesson-sub{color:var(--muted);font-size:14px;letter-spacing:2.2px;margin-bottom:30px}
+h2{font-size:19px;font-weight:600;letter-spacing:1.6px;margin:42px 0 14px;display:flex;align-items:center;gap:11px}
+h2::before{content:'';width:22px;height:1px;background:var(--gold);flex:none}
+p.lead{color:#b9b6ae;max-width:780px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.34fr);gap:26px;align-items:start;margin-top:24px}
+@media(max-width:1020px){.layout{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.sec-title{font-size:11px;letter-spacing:2.6px;color:var(--muted);padding:16px 20px;border-bottom:1px solid var(--line)}
+
+nav.toc{padding:8px}
+nav.toc button{display:flex;width:100%;gap:13px;align-items:baseline;text-align:left;padding:11px 13px;
+  border-radius:9px;color:var(--ink);line-height:1.5;transition:background .18s,color .18s;cursor:pointer;background:none;border:0;font:inherit}
+nav.toc button:hover{background:rgba(255,255,255,.04)}
+nav.toc button.on{background:rgba(218,186,133,.1);color:#fff}
+nav.toc .n{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;flex:none;width:20px}
+nav.toc button.on .n{color:var(--gold)}
+nav.toc .t{font-size:14.5px}
+nav.toc .a{font-size:11px;color:var(--muted);margin-left:auto;flex:none;letter-spacing:.6px}
+nav.toc button.on .a{color:var(--gold)}
+nav.toc .ok{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.14);flex:none;align-self:center}
+nav.toc button.seen .ok{background:var(--gold)}
+
+.read{padding:22px 22px 24px}
+.read .eyebrow{font-size:10.5px;letter-spacing:2.4px;color:var(--gold);margin-bottom:12px}
+.read h3{font-size:20px;margin:0 0 12px;font-weight:600;letter-spacing:1px;line-height:1.45}
+.read p{margin:0 0 14px;color:#c6c3bb;font-size:15px}
+.read .note{border-left:2px solid var(--gold-dim);padding:10px 0 10px 14px;color:var(--muted);font-size:13px;margin-top:6px}
+
+.stage-wrap{position:sticky;top:82px}
+@media(max-width:1020px){.stage-wrap{position:static}}
+.stage{position:relative;width:100%;aspect-ratio:16/10;min-height:600px;background:#050810;
+  border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+@media(max-width:700px){.stage{aspect-ratio:auto;height:100svh;min-height:620px}}
+
+.bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
+.bar button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);
+  padding:9px 15px;border-radius:9px;cursor:pointer;transition:.18s;min-height:40px}
+.bar button:hover{border-color:rgba(218,186,133,.5);color:var(--gold)}
+.bar button.act{background:rgba(218,186,133,.12);border-color:rgba(218,186,133,.45);color:var(--gold)}
+.status{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.6px}
+.track{display:flex;gap:3px;margin-top:12px}
+.track i{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;cursor:pointer;transition:background .25s}
+.track i.seen{background:rgba(218,186,133,.45)}
+.track i.cur{background:var(--gold)}
+
+.done-banner{margin-top:14px;padding:14px 18px;border-radius:12px;border:1px solid var(--gold-dim);
+  background:rgba(218,186,133,.08);color:var(--gold);font-size:14px;letter-spacing:1px}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="top-in">
+  <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+    <circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="10.5" ry="3.6" transform="rotate(-35 12 12)"/>
+    <ellipse cx="12" cy="12" rx="10.5" ry="6" transform="rotate(28 12 12)"/></svg></span>
+  <span><span class="top-t">大学物理 · 数字化教材</span><br><span class="top-s">INTERACTIVE TEXTBOOK MODULE</span></span>
+  <span class="lms">
+    <span class="chip" id="c-lms">本机记录</span>
+    <span class="chip" id="c-prog">进度 0/11</span>
+    <span class="chip" id="c-score">已学 0%</span>
+    <span class="chip" id="c-time">00:00</span>
+  </span>
+</div></header>
+
+<div class="wrap">
+  <h1 class="lesson">第 3 章　牛顿第二定律的演化</h1>
+  <div class="lesson-sub">从 1687 年《原理》的文字叙述，到 1736 年的 F = ma</div>
+
+  <p class="lead">本模块共 11 节。右侧交互组件记录你的学习进度：看过全部 11 节即记为<b>已完成</b>，成绩按已学节数计。中途退出会自动保存书签，下次进入从上次那节继续。</p>
+
+  <div class="layout">
+    <div>
+      <div class="card" style="margin-bottom:22px">
+        <div class="sec-title">本章目录 · 点击跳节（灰点=未学，金点=已学）</div>
+        <nav class="toc" id="toc"></nav>
+      </div>
+      <div class="card">
+        <div class="sec-title">当前节 · 教材正文</div>
+        <div class="read" id="read"></div>
+      </div>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage">
+        <iframe id="stage" src="fma-journey.embed.html?embed=1"
+          title="牛顿第二定律的演化 · 交互组件"
+          allow="autoplay; fullscreen; picture-in-picture"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+          loading="eager"></iframe>
+      </div>
+      <div class="bar">
+        <button id="b-play">▶ 自动播放</button>
+        <button id="b-prev">← 上一节</button>
+        <button id="b-next">下一节 →</button>
+        <button id="b-lang">EN</button>
+        <button id="b-reset">从头学习</button>
+        <span class="status" id="status">--</span>
+      </div>
+      <div class="track" id="track"></div>
+      <div class="done-banner" id="banner" hidden>✓ 全部 11 节已学完，本模块 11 节已全部学完。</div>
+    </div>
+  </div>
+
+  <footer>牛顿第二定律的演化 · 静态网页版 · 组件 429 KB 单文件零外部依赖 · 可完全离线部署</footer>
+</div>
+
+<script>
+/* =========================================================================
+   SCORM 适配层：同时支持 SCORM 1.2（超星 / 智慧树 / Moodle）与 SCORM 2004
+   找不到平台 API 时自动降级为 localStorage，本地预览也照常可用
+   ========================================================================= */
+var SCORM = (function () {
+  var api = null, ver = '';
+
+  function find(win) {
+    var t = 0;
+    while (win && t++ < 12) {
+      try {
+        if (win.API) { ver = '1.2'; return win.API; }
+        if (win.API_1484_11) { ver = '2004'; return win.API_1484_11; }
+      } catch (e) {}
+      try { if (win.parent && win.parent !== win) win = win.parent; else break; }
+      catch (e) { break; }
+    }
+    try {
+      if (window.opener && window.opener.API) { ver = '1.2'; return window.opener.API; }
+    } catch (e) {}
+    return null;
+  }
+
+  var K = {
+    '1.2':   { init:'LMSInitialize', get:'LMSGetValue', set:'LMSSetValue',
+               commit:'LMSCommit', finish:'LMSFinish', err:'LMSGetLastError',
+               status:'cmi.core.lesson_status', loc:'cmi.core.lesson_location',
+               score:'cmi.core.score.raw', susp:'cmi.suspend_data',
+               time:'cmi.core.session_time', exit:'cmi.core.exit' },
+    '2004':  { init:'Initialize', get:'GetValue', set:'SetValue',
+               commit:'Commit', finish:'Terminate', err:'GetLastError',
+               status:'cmi.completion_status', loc:'cmi.location',
+               score:'cmi.score.raw', susp:'cmi.suspend_data',
+               time:'cmi.session_time', exit:'cmi.exit' }
+  };
+
+  function k(name) { return K[ver] ? K[ver][name] : name; }
+  function call(fn) {
+    var a = Array.prototype.slice.call(arguments, 1);
+    if (!api || !api[fn]) return false;
+    try { return api[fn].apply(api, a); } catch (e) { return false; }
+  }
+
+  return {
+    version: function () { return ver; },
+    available: function () { return !!api; },
+    init: function () {
+      api = find(window);
+      if (!api) { ver = ''; return false; }
+      return String(call(k('init'), '')) === 'true';
+    },
+    get: function (name) {
+      if (!api) return '';
+      var v = call(k('get'), k(name));
+      return v === null || v === undefined ? '' : String(v);
+    },
+    set: function (name, v) { return String(call(k('set'), k(name), String(v))) === 'true'; },
+    commit: function () { return String(call(k('commit'), '')) === 'true'; },
+    finish: function () { return String(call(k('finish'), '')) === 'true'; }
+  };
+})();
+
+/* 时长格式：1.2 用 HH:MM:SS，2004 用 PT#H#M#S */
+function scormTime(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  if (SCORM.version() === '2004') return 'PT' + h + 'H' + m + 'M' + s + 'S';
+  var p = function (n) { return (n < 10 ? '0' : '') + n; };
+  return p(h) + ':' + p(m) + ':' + p(s);
+}
+function hhmmss(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+/* =========================================================================
+   学习状态
+   ========================================================================= */
+var N = 11;
+var CH = [{"i": 0, "zh": "熟悉的公式 · 意外的答案", "en": "A Familiar Formula", "age": "今天 · 课堂", "tag": "A FAMILIAR FORMULA", "zhText": "F = ma 人人会写；但如果把它带到 1687 年牛顿面前，他多半不会承认这是自己的原话。", "enText": "Everyone can write F = ma. But bring it to Newton in 1687, and he would hardly recognize it as his own law.", "note": "本页内容整理自《第十九期 牛顿第二定律的演化》，史料均见参考文献。", "noteEn": "Adapted from Episode 19, “The Evolution of Newton's Second Law”; sources cited in the reference list."}, {"i": 1, "zh": "1687 · 《原理》问世", "en": "The Principia, 1687", "age": "1687 年", "tag": "WORDS, NOT EQUATIONS", "zhText": "牛顿在《自然哲学的数学原理》中以文字叙述第二定律：运动的变化正比于所施加的动力，并沿力的直线方向发生。", "enText": "In the Principia, Newton states the second law in words: the change of motion is proportional to the motive force impressed, and made in the straight line of that force.", "note": "拉丁文原文：Mutationem motus proportionalem esse vi motrici impressae, et fieri secundum lineam rectam quâ vis illa imprimitur.", "noteEn": "The Latin original as printed in the Principia."}, {"i": 2, "zh": "“运动” 即动量", "en": "“Motion” Means Momentum", "age": "1687 年", "tag": "MOTUS MEANS MOMENTUM", "zhText": "原文中的“运动”（motus）指我们今天所说的动量——质量乘以速度；“运动的变化”即动量的变化 Δp。", "enText": "In Newton's usage, “motion” (motus) means what we now call momentum — mass times velocity; the “change of motion” is the change of momentum, Δp.", "note": "在质量不变的前提下，动量的变化对应速度随时间的变化。", "noteEn": "At constant mass, the change of momentum corresponds to the change of velocity over time."}, {"i": 3, "zh": "“力” 的边界", "en": "The Scope of Force", "age": "1687 年", "tag": "THE SCOPE OF FORCE", "zhText": "牛顿所说的力，特指地表物体受到的地球吸引力或行星受到的太阳引力——他从未把人推拉物体的力明确纳入。", "enText": "Newton's force refers specifically to the Earth's attraction on surface objects or the Sun's pull on planets — never explicitly the forces of human pushing and pulling.", "note": "定义的范围随时代扩展——这是阅读原著时最需要小心之处。", "noteEn": "The scope of definitions expands with time — the greatest caution when reading primary sources."}, {"i": 4, "zh": "最贴近原文的公式", "en": "F = Δp / Δt", "age": "1687 → 今天", "tag": "F = Δp / Δt", "zhText": "结合原著的计算，与牛顿意思最相近的写法其实是 F = Δp/Δt = mΔv/Δt——正是冲量与动量关系的变形。", "enText": "Given the calculations in the Principia, the formula closest to Newton's meaning is F = Δp/Δt = mΔv/Δt — a rearranged impulse–momentum relation.", "note": "把它移项整理，就是课本里冲量和动量的关系式。", "noteEn": "Rearranged, this is the impulse–momentum relation found in textbooks."}, {"i": 5, "zh": "1707 · 伐里农首次公式化", "en": "Varignon, 1707", "age": "1707 年", "tag": "THE FIRST EQUATION", "zhText": "法国数学家伐里农首次用近代数学描述第二定律：a = ΔV/Δt，并给出两力的比例式。", "enText": "The French mathematician Varignon first cast the second law in modern mathematics: a = ΔV/Δt, together with a proportion between two forces.", "note": "考虑到尚未学微积分，课堂上采用 ΔV/Δt 的简化形式。", "noteEn": "For students without calculus, we use the simplified ΔV/Δt form."}, {"i": 6, "zh": "1736 · 伯努利写下 F = ma", "en": "Bernoulli Writes F = ma", "age": "1736 年", "tag": "F = ma IS BORN", "zhText": "瑞士数学家伯努利写道：运动力由物体质量与加速度组成——历史上首次以 F = ma 正式表达第二定律。", "enText": "The Swiss mathematician Bernoulli wrote that motive force arises from mass and acceleration — the first formal statement of the second law as F = ma.", "note": "至此，第二定律才有了今天教科书里的模样。", "noteEn": "Only now does the law take the form found in today's textbooks."}, {"i": 7, "zh": "1736 · 欧拉的一步之遥", "en": "Euler, One Step Away", "age": "1736 年", "tag": "SO CLOSE, YET", "zhText": "欧拉在《力学》中写出 F = 常数 × 质量 × 加速度——与 F = ma 仅一步之遥，差的正是单位。", "enText": "In his Mechanica, Euler wrote F = constant × mass × acceleration — one step away from F = ma; what was missing was the unit.", "note": "差的不是智慧，而是一套公认的单位。", "noteEn": "What was missing was not wisdom, but an agreed system of units."}, {"i": 8, "zh": "单位的漫长之路", "en": "The Long Road of Units", "age": "1861 / 1948 年", "tag": "ONE UNIT, TWO CENTURIES", "zhText": "1861 年首次定出力的单位达因，距牛顿已近两百年；1948 年第 9 届国际度量衡会议采纳 newton 为国际标准单位，沿用至今。", "enText": "The dyne was defined in 1861 — nearly two centuries after Newton; in 1948 the 9th General Conference on Weights and Measures adopted the newton, in use ever since.", "note": "单位的标准化，是公式走向通用工具的关键一步。", "noteEn": "Standardised units were the key step that turned a law into a universal tool."}, {"i": 9, "zh": "质疑与正名", "en": "Doubt and Due Credit", "age": "后世", "tag": "CREDIT WHERE DUE", "zhText": "有人质疑这条定律是否该冠牛顿之名；但通读《原理》并结合他的计算，第二定律冠上牛顿的名字实至名归。", "enText": "Some have doubted whether the law should bear Newton's name; read whole and together with his calculations, the credit is well deserved.", "note": "很多理论孤证难立，需要更多人为它发声才能被广泛认可。", "noteEn": "Theories rarely stand on a single witness; they need many voices to be widely accepted."}, {"i": 10, "zh": "接力与凝练", "en": "A Relay Across Generations", "age": "1736 → 未来", "tag": "A RELAY ACROSS GENERATIONS", "zhText": "Δv/Δt 与 a 的微妙区别，为狭义相对论埋下伏笔；每个公式背后都不是一个人在战斗，而是几代人的接力。", "enText": "The subtle difference between Δv/Δt and a foreshadows special relativity; behind every formula stands not one person but generations in relay.", "note": "参考文献：Newton (1687/1846)；Varignon (1707)；Bernoulli (1736)；Euler (1736/2008)。", "noteEn": "References: Newton (1687/1846); Varignon (1707); Bernoulli (1736); Euler (1736/2008)."}];
+var LS_KEY = 'fma_journey_local_v1';
+
+var seen = new Array(N).fill(false);
+var cur = 0, lang = 'zh', playing = false;
+var elapsed = 0, lastTick = Date.now(), completed = false;
+
+function loadState() {
+  var raw = SCORM.available() ? SCORM.get('susp') : '';
+  var obj = null;
+  if (raw) { try { obj = JSON.parse(raw); } catch (e) {} }
+  if (!obj && !SCORM.available()) {
+    try { obj = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {}
+  }
+  if (obj && typeof obj === 'object') {
+    if (typeof obj.v === 'string' && obj.v.length === N) {
+      for (var i = 0; i < N; i++) seen[i] = obj.v.charAt(i) === '1';
+    }
+    if (obj.l === 'en' || obj.l === 'zh') lang = obj.l;
+    if (typeof obj.t === 'number') elapsed = obj.t;
+  }
+  var loc = SCORM.available() ? parseInt(SCORM.get('loc'), 10) : NaN;
+  if (isNaN(loc)) { try { loc = parseInt(localStorage.getItem(LS_KEY + '_loc'), 10); } catch (e) {} }
+  cur = (isNaN(loc) ? 0 : Math.max(0, Math.min(N - 1, loc)));
+  completed = SCORM.available() ? SCORM.get('status') === 'completed' : false;
+}
+
+function saveState(doCommit) {
+  var v = seen.map(function (b) { return b ? '1' : '0'; }).join('');
+  var payload = JSON.stringify({ v: v, l: lang, t: Math.round(elapsed) });
+  if (SCORM.available()) {
+    SCORM.set('susp', payload);
+    SCORM.set('loc', String(cur));
+    SCORM.set('time', scormTime(elapsed));
+    var n = seen.filter(Boolean).length;
+    SCORM.set('score', String(Math.round(n / N * 100)));
+    if (n === N && !completed) {
+      completed = true;
+      SCORM.set('status', 'completed');
+      SCORM.set('exit', '');
+    } else if (n < N && SCORM.get('status') !== 'completed') {
+      SCORM.set('status', 'incomplete');
+    }
+    if (doCommit) SCORM.commit();
+  } else {
+    try {
+      localStorage.setItem(LS_KEY, payload);
+      localStorage.setItem(LS_KEY + '_loc', String(cur));
+    } catch (e) {}
+  }
+  paintChips();
+}
+
+function resetProgress() {
+  seen = new Array(N).fill(false);
+  cur = 0; elapsed = 0; completed = false;
+  if (SCORM.available()) {
+    SCORM.set('susp', JSON.stringify({ v: new Array(N + 1).join('0'), l: lang, t: 0 }));
+    SCORM.set('loc', '0'); SCORM.set('score', '0'); SCORM.set('status', 'incomplete');
+    SCORM.commit();
+  }
+  send({ type: 'fma:restart' });
+  paint();
+  paintChips();
+}
+
+/* =========================================================================
+   界面
+   ========================================================================= */
+var frame = document.getElementById('stage');
+var toc = document.getElementById('toc');
+var readEl = document.getElementById('read');
+var trackEl = document.getElementById('track');
+var banner = document.getElementById('banner');
+
+var nav = CH.map(function (c) {
+  var b = document.createElement('button');
+  b.innerHTML = '<span class="n"></span><span class="t"></span><span class="a"></span><span class="ok"></span>';
+  b.onclick = function () { send({ type: 'fma:goto', index: c.i }); };
+  toc.appendChild(b);
+  return b;
+});
+var bars = CH.map(function (c) {
+  var s = document.createElement('i');
+  s.onclick = function () { send({ type: 'fma:goto', index: c.i }); };
+  trackEl.appendChild(s);
+  return s;
+});
+
+function send(m) { m.target = 'fma-journey'; try { frame.contentWindow.postMessage(m, '*'); } catch (e) {} }
+
+function paintChips() {
+  var n = seen.filter(Boolean).length;
+  document.getElementById('c-prog').textContent = '进度 ' + n + '/' + N;
+  document.getElementById('c-score').textContent = '已学 ' + Math.round(n / N * 100) + '%';
+  document.getElementById('c-time').textContent = hhmmss(elapsed);
+  var lms = document.getElementById('c-lms');
+  lms.textContent = SCORM.available() ? ('已连接 SCORM ' + SCORM.version()) : '本机记录进度';
+  lms.className = 'chip' + (SCORM.available() ? ' g' : ' warn');
+  banner.hidden = !(n === N);
+  nav.forEach(function (b, i) { b.classList.toggle('seen', !!seen[i]); });
+}
+
+function paint() {
+  var c = CH[cur];
+  nav.forEach(function (b, i) {
+    b.classList.toggle('on', i === cur);
+    b.querySelector('.n').textContent = String(i + 1).padStart(2, '0');
+    b.querySelector('.t').textContent = lang === 'zh' ? CH[i].zh : CH[i].en;
+    b.querySelector('.a').textContent = CH[i].age;
+  });
+  bars.forEach(function (s, i) { s.classList.toggle('seen', !!seen[i]); s.classList.toggle('cur', i === cur); });
+  var body = (lang === 'zh' ? c.zhText : c.enText) || c.zhText;
+  var note = (lang === 'zh' ? c.note : c.noteEn) || c.note;
+  readEl.innerHTML =
+    '<div class="eyebrow">' + c.tag + ' · ' + c.age + '</div>' +
+    '<h3>' + (lang === 'zh' ? c.zh : c.en) + '</h3>' +
+    '<p>' + body + '</p>' + (note ? '<div class="note">' + note + '</div>' : '');
+}
+
+/* 组件回传 */
+window.addEventListener('message', function (e) {
+  if (e.source !== frame.contentWindow) return;
+  var d = e.data;
+  if (!d || d.source !== 'fma-journey') return;
+
+  if (d.type === 'ready') {
+    if (cur > 0) setTimeout(function () { send({ type: 'fma:goto', index: cur }); }, 120);
+    if (lang === 'en') setTimeout(function () { send({ type: 'fma:lang', lang: 'en' }); }, 200);
+  }
+  if (d.type === 'chapter' && typeof d.index === 'number') {
+    cur = d.index;
+    if (!seen[cur]) { seen[cur] = true; saveState(true); }
+    else saveState(false);
+    paint();
+  }
+  if (d.type === 'state') {
+    playing = !!d.playing;
+    if (typeof d.chapter === 'number' && d.started && d.chapter !== cur) {
+      cur = d.chapter;
+      if (!seen[cur]) { seen[cur] = true; saveState(true); }
+      paint();
+    }
+    document.getElementById('b-play').textContent = playing ? '❚❚ 暂停' : '▶ 自动播放';
+    document.getElementById('b-play').classList.toggle('act', playing);
+    document.getElementById('status').textContent =
+      hhmmss(d.time) + ' / ' + hhmmss(d.total) + ' · 第 ' + (cur + 1) + ' 节';
+  }
+});
+
+document.getElementById('b-play').onclick = function () { send({ type: 'fma:toggle' }); };
+document.getElementById('b-prev').onclick = function () { send({ type: 'fma:prev' }); };
+document.getElementById('b-next').onclick = function () { send({ type: 'fma:next' }); };
+document.getElementById('b-reset').onclick = resetProgress;
+document.getElementById('b-lang').onclick = function (e) {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  e.target.textContent = lang === 'zh' ? 'EN' : '中';
+  send({ type: 'fma:lang', lang: lang });
+  saveState(true); paint();
+};
+
+/* 计时与提交 */
+setInterval(function () {
+  var now = Date.now();
+  elapsed += Math.min(2, (now - lastTick) / 1000);
+  lastTick = now;
+  document.getElementById('c-time').textContent = hhmmss(elapsed);
+}, 1000);
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) { lastTick = Date.now(); saveState(true); }
+});
+setInterval(function () { saveState(true); }, 30000);
+
+/* 启动 */
+SCORM.init();
+loadState();
+paint();
+paintChips();
+if (SCORM.available() && SCORM.get('status') === '') SCORM.set('status', 'incomplete');
+
+/* 离开时提交并结束会话 */
+window.addEventListener('beforeunload', function () {
+  saveState(true);
+  if (SCORM.available()) { SCORM.set('exit', 'suspend'); SCORM.commit(); SCORM.finish(); }
+});
+</script>
+</body>
+</html>
