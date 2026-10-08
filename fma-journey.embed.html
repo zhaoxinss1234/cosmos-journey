@@ -1085,9 +1085,11 @@ function fmaBeacon(p) {
       ua: (navigator.userAgent || '').slice(0, 120),
       ref: (document.referrer || '').slice(0, 200), v: 1
     };
-    var blob = new Blob([JSON.stringify(rec)], { type: 'application/json' });
+    // 用 text/plain 走「简单请求」：跨域时不触发浏览器预检(OPTIONS)，
+    // 即使函数 URL 没开 CORS 响应头，数据照样能进 SCF。SCF 端按原始文本 json.loads 即可。
+    var blob = new Blob([JSON.stringify(rec)], { type: 'text/plain' });
     if (navigator.sendBeacon) navigator.sendBeacon(BEACON_URL, blob);
-    else { var x = new XMLHttpRequest(); x.open('POST', BEACON_URL, true); x.setRequestHeader('Content-Type', 'application/json'); x.send(JSON.stringify(rec)); }
+    else { var x = new XMLHttpRequest(); x.open('POST', BEACON_URL, true); x.setRequestHeader('Content-Type', 'text/plain'); x.send(JSON.stringify(rec)); }
   } catch (e) {}
 }
 
